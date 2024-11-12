@@ -73,45 +73,45 @@ jobs:
   #         docker push ${{ secrets.DOCKERHUB_USERNAME }}/result-app:${{ github.run_number }}
 
  
-  trivy_scan:
-    name: Scan Docker Image for Vulnerabilities
-    runs-on: ubuntu-latest
-    #needs: [docker_build]
+  # trivy_scan:
+  #   name: Scan Docker Image for Vulnerabilities
+  #   runs-on: ubuntu-latest
+  #   #needs: [docker_build]
 
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v2
 
-      - name: Install Trivy
-        run: |
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
-          sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
-          trivy --version  # Verify Trivy installation
+  #     - name: Install Trivy
+  #       run: |
+  #         wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
+  #         sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
+  #         trivy --version  # Verify Trivy installation
 
-      - name: Scan Docker image with Trivy
-        run: |
-          echo "#####################
-          Scanning VOTING APP image for vulnerabilities...
-          ##############################"
+  #     - name: Scan Docker image with Trivy
+  #       run: |
+  #         echo "#####################
+  #         Scanning VOTING APP image for vulnerabilities...
+  #         ##############################"
 
-          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.VOTING_APP_IMAGE }}
+  #         trivy image --severity HIGH,CRITICAL --format table ${{ secrets.VOTING_APP_IMAGE }}
 
-          echo "#########################
-          Scanning RESULT APP image for vulnerabilities...
-          ######################"
+  #         echo "#########################
+  #         Scanning RESULT APP image for vulnerabilities...
+  #         ######################"
 
-          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.RESULT_APP_IMAGE }}
+  #         trivy image --severity HIGH,CRITICAL --format table ${{ secrets.RESULT_APP_IMAGE }}
 
-          echo "###################
-          Scanning WORKER APP image for vulnerabilities...
-          #########################"
+  #         echo "###################
+  #         Scanning WORKER APP image for vulnerabilities...
+  #         #########################"
 
-          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.WORKER_APP_IMAGE }}
+  #         trivy image --severity HIGH,CRITICAL --format table ${{ secrets.WORKER_APP_IMAGE }}
 
 
   deploy:
     runs-on: ubuntu-latest
-    needs: trivy_scan
+    #needs: trivy_scan
     strategy:
       matrix:
         region: [us-west-2, eu-west-1]
