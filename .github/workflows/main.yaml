@@ -7,76 +7,76 @@ on:
 
 jobs:
 
-  docker_build:
-    name: Build & Push to DockerHub
-    runs-on: ubuntu-latest
+  # docker_build:
+  #   name: Build & Push to DockerHub
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v2
 
-      - name: List all files for debugging
-        run: |
-          echo "Listing all files and directories"
-          ls -R ${{ github.workspace }}
+  #     - name: List all files for debugging
+  #       run: |
+  #         echo "Listing all files and directories"
+  #         ls -R ${{ github.workspace }}
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v2
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Docker build for testing
-        run: |
+  #     - name: Docker build for testing
+  #       run: |
 
-          echo "#############
-          BUILDING AND TAGGING VOTE APP
-          ####################"
+  #         echo "#############
+  #         BUILDING AND TAGGING VOTE APP
+  #         ####################"
 
-          docker build -f ${{ github.workspace }}/application/vote/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest ${{ github.workspace }}/application/vote
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:${{ github.run_number }}
+  #         docker build -f ${{ github.workspace }}/application/vote/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest ${{ github.workspace }}/application/vote
+  #         docker tag ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:${{ github.run_number }}
 
-          echo "##############
-          BUILDING AND TAGGING RESULT APP
-          #######################"
-          docker build -f ${{ github.workspace }}/application/result/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest ${{ github.workspace }}/application/result
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/result-app:${{ github.run_number }}
+  #         echo "##############
+  #         BUILDING AND TAGGING RESULT APP
+  #         #######################"
+  #         docker build -f ${{ github.workspace }}/application/result/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest ${{ github.workspace }}/application/result
+  #         docker tag ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/result-app:${{ github.run_number }}
           
-          echo "###############
-          BUILDING AND TAGGING WORKER APP
-          #####################"
-          docker build -f ${{ github.workspace }}/application/worker/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest ${{ github.workspace }}/application/worker
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:${{ github.run_number }}
+  #         echo "###############
+  #         BUILDING AND TAGGING WORKER APP
+  #         #####################"
+  #         docker build -f ${{ github.workspace }}/application/worker/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest ${{ github.workspace }}/application/worker
+  #         docker tag ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:${{ github.run_number }}
 
-      - name: Push images to Docker Hub
-        run: |
+  #     - name: Push images to Docker Hub
+  #       run: |
 
-          echo "#############
-          PUSHING VOTER APP IMAGE
-          ####################"
+  #         echo "#############
+  #         PUSHING VOTER APP IMAGE
+  #         ####################"
 
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:${{ github.run_number }}
+  #         docker push ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest
+  #         docker push ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:${{ github.run_number }}
 
-          echo "#############
-          PUSHING WORKER APP IMAGE
-          ####################"
+  #         echo "#############
+  #         PUSHING WORKER APP IMAGE
+  #         ####################"
 
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:${{ github.run_number }}
+  #         docker push ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest
+  #         docker push ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:${{ github.run_number }}
 
-          echo "#############
-          PUSHING RESULT APP IMAGE
-          ####################"
+  #         echo "#############
+  #         PUSHING RESULT APP IMAGE
+  #         ####################"
 
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/result-app:${{ github.run_number }}
+  #         docker push ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest
+  #         docker push ${{ secrets.DOCKERHUB_USERNAME }}/result-app:${{ github.run_number }}
 
  
   trivy_scan:
     name: Scan Docker Image for Vulnerabilities
     runs-on: ubuntu-latest
-    needs: [docker_build]
+    #needs: [docker_build]
 
     steps:
       - name: Check out code
@@ -94,21 +94,19 @@ jobs:
           Scanning VOTING APP image for vulnerabilities...
           ##############################"
 
-          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest
+          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.VOTING_APP_IMAGE }}
 
           echo "#########################
           Scanning RESULT APP image for vulnerabilities...
           ######################"
 
-          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest
+          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.RESULT_APP_IMAGE }}
 
           echo "###################
           Scanning WORKER APP image for vulnerabilities...
           #########################"
 
-          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest
-
-
+          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.WORKER_APP_IMAGE }}
 
 
   deploy:
