@@ -1,0 +1,163 @@
+name: Deploy to Multi-Region EKS Clusters
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  docker_build:
+    name: Build & Push to DockerHub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: List all files for debugging
+        run: |
+          echo "Listing all files and directories"
+          ls -R ${{ github.workspace }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Docker build for testing
+        run: |
+
+          echo "#############
+          BUILDING AND TAGGING VOTE APP
+          ####################"
+
+          docker build -f ${{ github.workspace }}/application/vote/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest ${{ github.workspace }}/application/vote
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:${{ github.run_number }}
+
+          echo "##############
+          BUILDING AND TAGGING RESULT APP
+          #######################"
+          docker build -f ${{ github.workspace }}/application/result/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest ${{ github.workspace }}/application/result
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/result-app:${{ github.run_number }}
+          
+          echo "###############
+          BUILDING AND TAGGING WORKER APP
+          #####################"
+          docker build -f ${{ github.workspace }}/application/worker/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest ${{ github.workspace }}/application/worker
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:${{ github.run_number }}
+
+      - name: Push images to Docker Hub
+        run: |
+
+          echo "#############
+          PUSHING VOTER APP IMAGE
+          ####################"
+
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:${{ github.run_number }}
+
+          echo "#############
+          PUSHING WORKER APP IMAGE
+          ####################"
+
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:${{ github.run_number }}
+
+          echo "#############
+          PUSHING RESULT APP IMAGE
+          ####################"
+
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/result-app:${{ github.run_number }}
+
+ 
+  trivy_scan:
+    name: Scan Docker Image for Vulnerabilities
+    runs-on: ubuntu-latest
+    needs: [docker_build]
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install Trivy
+        run: |
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
+          trivy --version  # Verify Trivy installation
+
+      - name: Scan Docker image with Trivy
+        run: |
+          echo "#####################
+          Scanning VOTING APP image for vulnerabilities...
+          ##############################"
+
+          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.DOCKERHUB_USERNAME }}/voting-app:latest
+
+          echo "#########################
+          Scanning RESULT APP image for vulnerabilities...
+          ######################"
+
+          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.DOCKERHUB_USERNAME }}/result-app:latest
+
+          echo "###################
+          Scanning WORKER APP image for vulnerabilities...
+          #########################"
+
+          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.DOCKERHUB_USERNAME }}/worker-app:latest
+
+
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: trivy_scan
+    strategy:
+      matrix:
+        region: [us-west-2, eu-west-1]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ matrix.region }}
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/v1.26.3/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+          kubectl version --client
+
+      - name: Install eksctl
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.111.0/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+
+      - name: Set up kubeconfig
+        run: |
+          if [[ "${{ matrix.region }}" == "us-west-2" ]]; then
+            aws eks update-kubeconfig --region ${{ matrix.region }} --name ${{ secrets.US_WEST_2_EKS_CLUSTER_NAME }};
+          elif [[ "${{ matrix.region }}" == "eu-west-1" ]]; then
+            aws eks update-kubeconfig --region ${{ matrix.region }} --name ${{ secrets.EU_WEST_1_EKS_CLUSTER_NAME }};
+          fi
+
+      - name: Deploy to EKS Cluster
+        run: |
+          #kubectl delete deployments --all -n olumoko-voting-app
+          #kubectl delete services --all -n olumoko-voting-app
+          kubectl apply -f k8-manifest/ && \
+          kubectl apply -f k8-manifest/logging/
+
+      - name: Verify Deployment
+        run: |
+          kubectl get all -n olumoko-voting-app
+
+    environment: ${{ matrix.region }}
