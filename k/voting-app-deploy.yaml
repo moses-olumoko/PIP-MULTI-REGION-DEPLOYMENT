@@ -4,7 +4,7 @@ metadata:
   name: voting-app-deploy
   namespace: olumoko-voting-app
   labels:
-    name: voting-app-pod
+    name: voting-app-deploy
     app: demo-voting-app
 spec:
   replicas: 1
@@ -21,34 +21,29 @@ spec:
     spec:
       containers:
         - name: voting-app
-          image: aries5533/vote:latest #kodekloud/examplevotingapp_vote:v1
+          image: kodekloud/examplevotingapp_vote:v1
           ports:
           - containerPort: 80
-          resources:
-            requests:
-              cpu: "500m"
-              memory: "1Gi"
-            limits:
-              cpu: "1000m"
-              memory: "2Gi"
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: voting-service
+  name: voting-service  
   namespace: olumoko-voting-app
+  # annotations:
+  #   service.beta.kubernetes.io/aws-load-balancer-type: external
+  #   service.beta.kubernetes.io/aws-load-balancer-alb-target-type: ip
+  #   service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
   labels:
     name: voting-service
     app: demo-voting-app
-  #annotations:
-  #  service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing" # Specifies public LoadBalancer
 spec:
-  type: NodePort #LoadBalancer
+  type: ClusterIP
   ports:
   - port: 80
     targetPort: 80
+    protocol: TCP
   selector:
     name: voting-app-pod
     app: demo-voting-app

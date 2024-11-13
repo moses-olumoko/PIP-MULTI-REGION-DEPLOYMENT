@@ -1,96 +1,67 @@
-
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: postgres-deploy
-#   namespace: olumoko-voting-app
-#   labels:
-#     name: postgres-deploy
-#     app: demo-voting-app
-# spec:
-#   replicas: 1
-#   selector:
-#     matchLabels:
-#       name: postgres-pod
-#       app: demo-voting-app
-#   template:
-#     metadata:
-#       name: postgres-pod
-#       labels:
-#         name: postgres-pod
-#         app: demo-voting-app
-#     spec:
-#       containers:
-#       - name: postgres
-#         image: postgres
-#         ports:
-#         - containerPort: 5432
-#         env:
-#           - name: POSTGRES_HOST
-#             value: "primary-region-olumoko.cmcuzrqejgir.eu-west-1.rds.amazonaws.com" # Replace with your RDS endpoint
-#           - name: POSTGRES_USER
-#             valueFrom:
-#               secretKeyRef:
-#                 name: rds-credentials
-#                 key: POSTGRES_USER # Pulling from the secret
-#           - name: POSTGRES_DB
-#             value: "postgres"
-#           - name: POSTGRES_PASSWORD
-#             valueFrom:
-#               secretKeyRef:
-#                 name: rds-credentials
-#                 key: POSTGRES_PASSWORD # Make sure the secret is created
-#           - name: POSTGRES_HOST_AUTH_METHOD
-#             value: trust
-
-
-          # - name: POSTGRES_USER
-          #   value: "postgres"
-          # - name: POSTGRES_PASSWORD
-          #   value: "postgres"
-          # - name: POSTGRES_HOST_AUTH_METHOD
-          #   value: trust
-
-
-
-
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    app: demo-voting-app
   name: postgres-deploy
   namespace: olumoko-voting-app
+  labels:
+    name: postgres-deploy
+    app: demo-voting-app
 spec:
   replicas: 1
   selector:
     matchLabels:
+      name: postgres-pod
       app: demo-voting-app
   template:
     metadata:
+      name: postgres-pod
       labels:
+        name: postgres-pod
         app: demo-voting-app
     spec:
       containers:
-      - image: postgres:15-alpine
-        name: postgres
-        env:
-        - name: POSTGRES_USER
-          value: postgres
-        - name: POSTGRES_PASSWORD
-          value: postgres
-        - name: POSTGRES_HOST_AUTH_METHOD
-          value: trust
+      - name: postgres
+        image: postgres
         ports:
         - containerPort: 5432
-          name: postgres
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: db-data
-      volumes:
-      - name: db-data
-        emptyDir: {} 
+        env:
+          - name: POSTGRES_USER
+            value: "postgres"
+          - name: POSTGRES_PASSWORD
+            value: "postgres"
+          - name: POSTGRES_HOST_AUTH_METHOD
+            value: trust
+        # env:
+        # - name: DB_HOST
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: rds-postgres-secret
+        #       key: DB_HOST
+        # - name: DB_USER
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: rds-postgres-secret
+        #       key: DB_USER
+        # - name: DB_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: rds-postgres-secret
+        #       key: DB_PASSWORD
+        # - name: DB_NAME
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: rds-postgres-secret
+        #       key: DB_NAME
+
+
+
+
+
+
+
+
+
+
 ---
 apiVersion: v1
 kind: Service
@@ -107,4 +78,4 @@ spec:
    selector:
      name: postgres-pod
      app: demo-voting-app
-        
+         
