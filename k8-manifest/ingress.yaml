@@ -72,7 +72,7 @@
 #     alb.ingress.kubernetes.io/scheme: internet-facing
 #     alb.ingress.kubernetes.io/target-type: ip
 #     alb.ingress.kubernetes.io/group.name: groupv1-appab
-#     alb.ingress.kubernetes.io/healthcheck-path: /result  # Health check path for result service
+# #    alb.ingress.kubernetes.io/healthcheck-path: /result  # Health check path for result service
 
 # spec:
 #   ingressClassName: alb
