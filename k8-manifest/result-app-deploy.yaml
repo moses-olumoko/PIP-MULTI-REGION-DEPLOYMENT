@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: result-app
-          image: aries5533/result:latest #kodekloud/examplevotingapp_result:v1
+          image: kodekloud/examplevotingapp_result:v1 #aries5533/result:latest
           ports:
           - containerPort: 80
           resources:
@@ -42,10 +42,10 @@ metadata:
   labels:
      name: result-service
      app: demo-voting-app
-  #annotations:
-  #  service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing" # Specifies public LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing" # Specifies public LoadBalancer
 spec:
-   type: NodePort #LoadBalancer
+   type: LoadBalancer
    ports:
      - port: 80
        targetPort: 80
