@@ -57,3 +57,5 @@ resource "aws_globalaccelerator_endpoint_group" "us_west_2_endpoint_group" {
     weight      = 128
   }
 }
+
+###################
