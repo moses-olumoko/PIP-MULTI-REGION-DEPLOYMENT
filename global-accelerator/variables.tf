@@ -14,3 +14,14 @@ variable "secret_key" {
     sensitive = true
     default = ""
 }
+
+variable "primary_service_endpoint" {
+    type = string
+    default = ""
+}
+
+variable "secondary_service_endpoint" {
+    type = string
+    default = ""
+}
+

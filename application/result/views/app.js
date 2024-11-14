@@ -8,24 +8,26 @@ app.controller('statsCtrl', function($scope){
   $scope.aPercent = 50;
   $scope.bPercent = 50;
 
-  var updateScores = function(){
+  var updateScores = function() {
     socket.on('scores', function (json) {
-       data = JSON.parse(json);
-       var a = parseInt(data.a || 0);
-       var b = parseInt(data.b || 0);
-
-       var percentages = getPercentages(a, b);
-
-       bg1.style.width = percentages.a + "%";
-       bg2.style.width = percentages.b + "%";
-
-       $scope.$apply(function () {
-         $scope.aPercent = percentages.a;
-         $scope.bPercent = percentages.b;
-         $scope.total = a + b;
-       });
+      console.log("Received scores: ", json);  // Check if data is being received correctly
+      var data = JSON.parse(json);
+      var a = parseInt(data.a || 0);
+      var b = parseInt(data.b || 0);
+  
+      var percentages = getPercentages(a, b);
+  
+      bg1.style.width = percentages.a + "%";
+      bg2.style.width = percentages.b + "%";
+  
+      $scope.$apply(function () {
+        $scope.aPercent = percentages.a;
+        $scope.bPercent = percentages.b;
+        $scope.total = a + b;
+      });
     });
   };
+  
 
   var init = function(){
     document.body.style.opacity=1;
