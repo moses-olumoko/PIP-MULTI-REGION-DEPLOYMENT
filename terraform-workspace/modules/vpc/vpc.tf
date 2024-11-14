@@ -24,12 +24,14 @@ module "olumoko_vpc" {
 
   public_subnet_tags = {
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                      = 1
+    "kubernetes.io/role/elb"                      = "1"
+    "karpenter.sh/discovery"                      = local.cluster_name
   }
 
   private_subnet_tags = {
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"             = 1
+    "kubernetes.io/role/internal-elb"             = "1"
+    "karpenter.sh/discovery"                      = local.cluster_name
   }
 }
 
@@ -93,14 +95,14 @@ module "security-group" {
        to_port     = 443
        protocol    = "tcp"
        description = "Allow outbound HTTPS traffic"
-       cidr_blocks = "10.0.0.0/16"
+       cidr_blocks = "0.0.0.0/0"
       },
       {
        from_port   = 80
        to_port     = 80
        protocol    = "tcp"
        description = "Allow outbound HTTP traffic"
-       cidr_blocks = "10.0.0.0/16"
+       cidr_blocks = "0.0.0.0/0"
       }
     ]
 
@@ -125,6 +127,7 @@ module "security-group" {
 
     tags = {
         name = "olumoko-${terraform.workspace}-sg"
+        
     }
        
 }

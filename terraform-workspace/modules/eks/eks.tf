@@ -1,3 +1,5 @@
+
+
 module "eks_blueprints" {
   source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.32.1"
 
@@ -35,8 +37,6 @@ provider "kubernetes" {
 
 
 #############
-
-
 #module "kubernetes_addons" {
   #source = "github.com/aws-ia/terraform-aws-eks-blueprints//modules/kubernetes-addons?ref=v4.32.1"
 
@@ -81,20 +81,18 @@ module "eks_blueprints_addons" {
   enable_aws_load_balancer_controller = true
   enable_metrics_server = true
   enable_cert_manager   = true
-  enable_cluster_autoscaler = true
-  enable_external_dns = true
+  #enable_cluster_autoscaler = true
+  #enable_external_dns = true
+  #enable_kube_prometheus_stack           = true
+  #enable_karpenter                       = true
+
+
   
 
   tags = {
     Environment = "dev"
   }
 }
-
-
-
-
-
-
 
 
 provider "helm" {
