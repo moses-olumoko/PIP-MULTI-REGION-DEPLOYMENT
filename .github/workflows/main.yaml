@@ -73,126 +73,126 @@ jobs:
   #         docker push ${{ secrets.DOCKERHUB_USERNAME }}/result-app:${{ github.run_number }}
 
  
-  # trivy_scan:
-  #   name: Scan Docker Images for Vulnerabilities
-  #   runs-on: ubuntu-latest
-  #   #needs: [docker_build]
-
-  #   steps:
-  #     - name: Check out code
-  #       uses: actions/checkout@v2
-
-  #         # Cache Trivy installation
-  #     - name: Cache Trivy installation
-  #       uses: actions/cache@v3
-  #       with:
-  #         path: ~/.cache/trivy
-  #         key: trivy-${{ runner.os }}-v0.43.0
-  #         restore-keys: |
-  #           trivy-${{ runner.os }}-
- 
-  #     - name: Install Trivy
-  #       run: |
-  #         if [ ! -d "$HOME/.cache/trivy" ]; then
-  #           echo "Installing Trivy version v0.43.0..."
-  #           wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
-  #           sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
-  #         else
-  #           echo "Trivy found in cache."
-  #         fi
-  #           trivy --version  # Verify Trivy installation
-
-  #      # Cache Docker image scan results based on image hash
-  #     - name: Cache Docker scan results
-  #       uses: actions/cache@v3
-  #       with:
-  #         path: ~/.cache/trivy/results
-  #         key: trivy-scan-${{ secrets.VOTING_APP_IMAGE }}-${{ secrets.RESULT_APP_IMAGE }}-${{ secrets.WORKER_APP_IMAGE }}-${{ github.sha }}
-  #         restore-keys: |
-  #           trivy-scan-
-    
-  #      # Step to scan Docker images
-  #     - name: Scan Docker image with Trivy
-  #       run: |
-  #         echo "#####################
-  #         Scanning VOTING APP image for vulnerabilities...
-  #         ##############################"
-
-  #         attempts=0
-  #         max_attempts=5
-  #         until trivy image --severity HIGH,CRITICAL --format table ${{ secrets.VOTING_APP_IMAGE }} || [ $attempts -eq $max_attempts ]; do
-  #           echo "Retrying scan... attempt $((attempts+1))"
-  #           attempts=$((attempts+1))
-  #           sleep 10  # Delay before retry
-  #         done
-  #         if [ $attempts -eq $max_attempts ]; then
-  #           echo "Failed to complete the scan after $max_attempts attempts."
-  #           exit 1
-  #         fi
-
-  #         #trivy image --severity HIGH,CRITICAL --format table ${{ secrets.VOTING_APP_IMAGE }}
-
-  #         echo "#########################
-  #         Scanning RESULT APP image for vulnerabilities...
-  #         ######################"
-
-  #         trivy image --severity HIGH,CRITICAL --format table ${{ secrets.RESULT_APP_IMAGE }}
-
-  #         echo "###################
-  #         Scanning WORKER APP image for vulnerabilities...
-  #         #########################"
-
-  #         trivy image --severity HIGH,CRITICAL --format table ${{ secrets.WORKER_APP_IMAGE }}
-
-
-  deploy:
+  trivy_scan:
+    name: Scan Docker Images for Vulnerabilities
     runs-on: ubuntu-latest
-    #needs: trivy_scan
-    strategy:
-      matrix:
-        region: [us-west-2, eu-west-1]
+    #needs: [docker_build]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v2
 
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v3
+          # Cache Trivy installation
+      - name: Cache Trivy installation
+        uses: actions/cache@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ matrix.region }}
-
-      - name: Install kubectl
+          path: ~/.cache/trivy
+          key: trivy-${{ runner.os }}-v0.43.0
+          restore-keys: |
+            trivy-${{ runner.os }}-
+ 
+      - name: Install Trivy
         run: |
-          curl -LO "https://dl.k8s.io/release/v1.26.3/bin/linux/amd64/kubectl"
-          chmod +x ./kubectl
-          sudo mv ./kubectl /usr/local/bin/kubectl
-          kubectl version --client
+          if [ ! -d "$HOME/.cache/trivy" ]; then
+            echo "Installing Trivy version v0.43.0..."
+            wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
+            sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
+          else
+            echo "Trivy found in cache."
+          fi
+            trivy --version  # Verify Trivy installation
 
-      - name: Install eksctl
+       # Cache Docker image scan results based on image hash
+      - name: Cache Docker scan results
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/trivy/results
+          key: trivy-scan-${{ secrets.VOTING_APP_IMAGE }}-${{ secrets.RESULT_APP_IMAGE }}-${{ secrets.WORKER_APP_IMAGE }}-${{ github.sha }}
+          restore-keys: |
+            trivy-scan-
+    
+       # Step to scan Docker images
+      - name: Scan Docker image with Trivy
         run: |
-          curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.111.0/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
-          sudo mv /tmp/eksctl /usr/local/bin
+          echo "#####################
+          Scanning VOTING APP image for vulnerabilities...
+          ##############################"
 
-      - name: Set up kubeconfig
-        run: |
-          if [[ "${{ matrix.region }}" == "us-west-2" ]]; then
-            aws eks update-kubeconfig --region ${{ matrix.region }} --name ${{ secrets.US_WEST_2_EKS_CLUSTER_NAME }};
-          elif [[ "${{ matrix.region }}" == "eu-west-1" ]]; then
-            aws eks update-kubeconfig --region ${{ matrix.region }} --name ${{ secrets.EU_WEST_1_EKS_CLUSTER_NAME }};
+          attempts=0
+          max_attempts=5
+          until trivy image --severity HIGH,CRITICAL --format table ${{ secrets.VOTING_APP_IMAGE }} || [ $attempts -eq $max_attempts ]; do
+            echo "Retrying scan... attempt $((attempts+1))"
+            attempts=$((attempts+1))
+            sleep 10  # Delay before retry
+          done
+          if [ $attempts -eq $max_attempts ]; then
+            echo "Failed to complete the scan after $max_attempts attempts."
+            exit 1
           fi
 
-      - name: Deploy to EKS Cluster
-        run: |
-          #kubectl delete deployments --all -n olumoko-voting-app
-          #kubectl delete services --all -n olumoko-voting-app
-          kubectl apply -f k8-manifest/
-          #kubectl apply -f k8-manifest/ && \
-          #kubectl apply -f k8-manifest/logging/
+          #trivy image --severity HIGH,CRITICAL --format table ${{ secrets.VOTING_APP_IMAGE }}
 
-      - name: Verify Deployment
-        run: |
-          kubectl get all -n olumoko-voting-app
+          echo "#########################
+          Scanning RESULT APP image for vulnerabilities...
+          ######################"
 
-    environment: ${{ matrix.region }}
+          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.RESULT_APP_IMAGE }}
+
+          echo "###################
+          Scanning WORKER APP image for vulnerabilities...
+          #########################"
+
+          trivy image --severity HIGH,CRITICAL --format table ${{ secrets.WORKER_APP_IMAGE }}
+
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   #needs: trivy_scan
+  #   strategy:
+  #     matrix:
+  #       region: [us-west-2, eu-west-1]
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+
+  #     - name: Set up AWS CLI
+  #       uses: aws-actions/configure-aws-credentials@v3
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ matrix.region }}
+
+  #     - name: Install kubectl
+  #       run: |
+  #         curl -LO "https://dl.k8s.io/release/v1.26.3/bin/linux/amd64/kubectl"
+  #         chmod +x ./kubectl
+  #         sudo mv ./kubectl /usr/local/bin/kubectl
+  #         kubectl version --client
+
+  #     - name: Install eksctl
+  #       run: |
+  #         curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/v0.111.0/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+  #         sudo mv /tmp/eksctl /usr/local/bin
+
+  #     - name: Set up kubeconfig
+  #       run: |
+  #         if [[ "${{ matrix.region }}" == "us-west-2" ]]; then
+  #           aws eks update-kubeconfig --region ${{ matrix.region }} --name ${{ secrets.US_WEST_2_EKS_CLUSTER_NAME }};
+  #         elif [[ "${{ matrix.region }}" == "eu-west-1" ]]; then
+  #           aws eks update-kubeconfig --region ${{ matrix.region }} --name ${{ secrets.EU_WEST_1_EKS_CLUSTER_NAME }};
+  #         fi
+
+  #     - name: Deploy to EKS Cluster
+  #       run: |
+  #         #kubectl delete deployments --all -n olumoko-voting-app
+  #         #kubectl delete services --all -n olumoko-voting-app
+  #         kubectl apply -f k8-manifest/
+  #         #kubectl apply -f k8-manifest/ && \
+  #         #kubectl apply -f k8-manifest/logging/
+
+  #     - name: Verify Deployment
+  #       run: |
+  #         kubectl get all -n olumoko-voting-app
+
+  #   environment: ${{ matrix.region }}
