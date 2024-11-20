@@ -183,18 +183,6 @@ jobs:
             aws eks update-kubeconfig --region ${{ matrix.region }} --name ${{ secrets.EU_WEST_1_EKS_CLUSTER_NAME }};
           fi
 
-
-      - name: Fetch replica count from environment variables
-        run: |
-          if [[ "${{ matrix.region }}" == "us-west-2" ]]; then
-            export REPLICAS=${{ secrets.US_WEST_2_REPLICAS }};
-          elif [[ "${{ matrix.region }}" == "eu-west-1" ]]; then
-            export REPLICAS=${{ secrets.EU_WEST_1_REPLICAS }};
-          fi
-
-          sed -i "s/REPLICAS_PLACEHOLDER/$REPLICAS/g" k8-manifest/
-
-
       - name: Deploy to EKS Cluster
         run: |
           #kubectl delete deployments --all -n olumoko-voting-app
