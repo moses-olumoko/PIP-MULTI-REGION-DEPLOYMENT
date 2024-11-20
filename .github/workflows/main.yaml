@@ -100,7 +100,11 @@ jobs:
           else
             echo "Trivy found in cache."
           fi
-            trivy --version  # Verify Trivy installation
+
+      - name: Verify Trivy Installation
+        run: |
+          trivy --version  # This will check that Trivy is installed and available
+
 
        # Cache Docker image scan results based on image hash
       - name: Cache Docker scan results
