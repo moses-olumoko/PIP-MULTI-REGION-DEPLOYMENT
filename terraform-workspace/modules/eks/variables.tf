@@ -5,17 +5,17 @@ variable "vpc_cidr" {
 
 
 variable "vpc_id" {
-    default = ""
+  default = ""
 }
 
 
 variable "vpc_private_subnets" {
-    description = "List of subnet IDs for the EKS cluster"
-    type        = list(string)
+  description = "List of subnet IDs for the EKS cluster"
+  type        = list(string)
 }
 
 
-variable "vpc_public_subnets" {
-    description = "List of subnet IDs for the EKS cluster"
-    type        = list(string)
-}
+#variable "vpc_public_subnets" {
+#  description = "List of subnet IDs for the EKS cluster"
+#  type        = list(string)
+#}

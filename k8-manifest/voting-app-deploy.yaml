@@ -7,7 +7,7 @@ metadata:
     name: voting-app-pod
     app: demo-voting-app
 spec:
-  replicas: 1
+  replicas: REPLICAS_PLACEHOLDER
   selector:
     matchLabels:
       name: voting-app-pod
@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: voting-app
-          image: kodekloud/examplevotingapp_vote:v1 #aries5533/vote:latest 
+          image: aries5533/vote:latest  #kodekloud/examplevotingapp_vote:v1
           ports:
           - containerPort: 80
           resources:
@@ -42,10 +42,10 @@ metadata:
   labels:
     name: voting-service
     app: demo-voting-app
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing" # Specifies public LoadBalancer
+  #annotations:
+  #  service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing" # Specifies public LoadBalancer
 spec:
-  type: LoadBalancer
+  type: NodePort #LoadBalancer
   ports:
   - port: 80
     targetPort: 80

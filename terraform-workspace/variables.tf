@@ -4,13 +4,13 @@ variable "region" {
 }
 
 variable "access_key" {
-    type = string
-    sensitive = true
-    default = "" 
+  type      = string
+  sensitive = true
+  default   = ""
 }
 
 variable "secret_key" {
-    type = string
-    sensitive = true
-    default = ""
+  type      = string
+  sensitive = true
+  default   = ""
 }
