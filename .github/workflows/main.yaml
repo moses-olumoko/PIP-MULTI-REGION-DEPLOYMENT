@@ -82,37 +82,44 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-
-            # Cache Trivy installation
-      - name: Cache Trivy installation
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/trivy
-          key: trivy-${{ runner.os }}-v0.43.0
-          restore-keys: |
-            trivy-${{ runner.os }}-
-
       - name: Install Trivy
         run: |
-          if [ ! -f "$HOME/.cache/trivy/trivy" ]; then
-            echo "Installing Trivy version v0.43.0..."
-            wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
-            sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
-            # Move to cache for reuse
-            mv /usr/local/bin/trivy $HOME/.cache/trivy/trivy
-          else
-            echo "Trivy found in cache."
-          fi
-
-      - name: Verify Trivy Installation
-        run: |
-          # Add Trivy to PATH for this step
-          export PATH=$HOME/.cache/trivy:$PATH
-          trivy --version  # Verify Trivy installation and check the version
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
+          trivy --version  # Verify Trivy installation
 
 
-          # Cache Trivy installation
+
+      #       # Cache Trivy installation
       # - name: Cache Trivy installation
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.cache/trivy
+      #     key: trivy-${{ runner.os }}-v0.43.0
+      #     restore-keys: |
+      #       trivy-${{ runner.os }}-
+
+      # - name: Install Trivy
+      #   run: |
+      #     if [ ! -f "$HOME/.cache/trivy/trivy" ]; then
+      #       echo "Installing Trivy version v0.43.0..."
+      #       wget https://github.com/aquasecurity/trivy/releases/download/v0.43.0/trivy_0.43.0_Linux-64bit.deb
+      #       sudo dpkg -i trivy_0.43.0_Linux-64bit.deb
+      #       # Move to cache for reuse
+      #       mv /usr/local/bin/trivy $HOME/.cache/trivy/trivy
+      #     else
+      #       echo "Trivy found in cache."
+      #     fi
+
+      # - name: Verify Trivy Installation
+      #   run: |
+      #     # Add Trivy to PATH for this step
+      #     export PATH=$HOME/.cache/trivy:$PATH
+      #     trivy --version  # Verify Trivy installation and check the version
+
+
+      #     # Cache Trivy installation
+      # # - name: Cache Trivy installation
       #   uses: actions/cache@v3
       #   with:
       #     path: ~/.cache/trivy
