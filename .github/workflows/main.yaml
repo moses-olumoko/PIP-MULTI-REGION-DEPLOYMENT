@@ -192,7 +192,7 @@ jobs:
             export REPLICAS=${{ secrets.EU_WEST_1_REPLICAS }};
           fi
 
-          sed -i "s/REPLICAS_PLACEHOLDER/$REPLICAS/g" k8-manifest/deployment.yaml
+          sed -i "s/REPLICAS_PLACEHOLDER/$REPLICAS/g" k8-manifest/
 
 
       - name: Deploy to EKS Cluster
